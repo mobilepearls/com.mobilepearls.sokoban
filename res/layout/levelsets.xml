@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent" android:gravity="center_vertical">
+
+	<RelativeLayout android:layout_width="fill_parent" android:layout_height="fill_parent" android:gravity="center_vertical" android:layout_above="@+id/ad">
+		<Button android:id="@+id/levelsMicrobanEasyButton" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="Microban (easy)" android:onClick="onButtonClicked"/>
+		<Button android:id="@+id/levelsOriginalButton" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="Original" android:onClick="onButtonClicked"
+			android:layout_below="@id/levelsMicrobanEasyButton" />
+		<Button android:id="@+id/levelsMasSasquatchButton" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="Mas Sasquatch"
+			android:layout_below="@id/levelsOriginalButton" android:onClick="onButtonClicked" />
+		<Button android:id="@+id/levelsSasIIIButton" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="Sasquatch III"
+			android:layout_below="@id/levelsMasSasquatchButton" android:onClick="onButtonClicked"/> 
+		<Button android:id="@+id/levelsSasIVButton" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="Sasquatch IV"
+			android:layout_below="@id/levelsSasIIIButton" android:onClick="onButtonClicked"/>
+	</RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="fill_parent"
+	android:layout_height="fill_parent" android:gravity="center_vertical">
+
+	<RelativeLayout android:layout_width="fill_parent" android:layout_height="fill_parent" android:gravity="center_vertical" android:layout_above="@+id/ad">
+		<Button android:id="@+id/startbutton" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="Start" />
+		<Button android:id="@+id/settingsbutton" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="Settings"
+			android:layout_below="@id/startbutton"/>
+		<Button android:id="@+id/aboutbutton" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="About"
+			android:layout_below="@id/settingsbutton" />
+		<Button android:id="@+id/exitbutton" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:text="Exit"
+			android:layout_below="@id/aboutbutton"/>
+	</RelativeLayout>
+
+</RelativeLayout>
