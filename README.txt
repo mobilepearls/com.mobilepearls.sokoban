@@ -1,5 +1,4 @@
-Sokoban
-by Mobile Pearls - http://mobilepearls.com/
+Sokoban by Mobile Pearls - http://mobilepearls.com/
 
 A version of the classical Sokoban game (http://en.wikipedia.org/wiki/Sokoban)
 for Android.
@@ -39,5 +38,4 @@ For the kids           by Ross (W.R.) Brown <ross@bnr.ca>
 Simple Sokoban         simplified original levels
 		       by Phil Shapiro <pshapiro@his.com>
 Dimitri & Yorick       by Jacques Duthen <duthen@club-internet.fr>
-
 ------------------------------------------------------------------------
