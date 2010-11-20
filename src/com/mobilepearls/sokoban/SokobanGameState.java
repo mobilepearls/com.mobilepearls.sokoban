@@ -217,6 +217,10 @@ public class SokobanGameState implements Serializable {
 
 				playerX = newX;
 				playerY = newY;
+				if (isDone()) {
+					// if moving multiple steps at once, stop if an intermediate step may finish the game:
+					return true;
+				}
 			}
 		}
 		return somethingChanged;
