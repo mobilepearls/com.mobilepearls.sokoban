@@ -28,14 +28,8 @@ public class SokobanGameActivity extends Activity {
 
 	private SokobanGameView view;
 
-	/*
-	 * Only @Override on 2.0 android - see
-	 * http://android-developers.blogspot.com/2009/12/back-and-other-hard-keys-three-stories.html
-	 */
+	@Override
 	public void onBackPressed() {
-		// This will be called either automatically for you on 2.0
-		// or later, or by the code in onKeyPressed() on earlier versions of the
-		// platform.
 		view.backPressed();
 	}
 
@@ -80,13 +74,7 @@ public class SokobanGameActivity extends Activity {
 	/** Overridden to handle back button - see {@link SokobanGameActivity#onBackPressed() } */
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (android.os.Build.VERSION.SDK_INT < 5 /* =android.os.Build.VERSION_CODES.ECLAIR */
-				&& keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
-			// Take care of calling this method on earlier versions of
-			// the platform where it doesn't exist.
-			onBackPressed();
-			return true;
-		} else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+		if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
 			if (IMAGE_SIZE < 68)
 				setImageSize(IMAGE_SIZE + 2);
 			return true;
