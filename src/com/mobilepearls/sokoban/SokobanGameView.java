@@ -33,6 +33,7 @@ public class SokobanGameView extends View {
 	final SokobanGameState game;
 	private final boolean hapticFeedback;
 	boolean ignoreDrag;
+	boolean isDrag;		//Used to determine if the touchscreen move is a tap or drag
 	private Bitmap manOnFloorBitmap;
 	private Bitmap manOnTargetBitmap;
 	GameMetrics metrics;
@@ -46,8 +47,8 @@ public class SokobanGameView extends View {
 		super(context, attributes);
 
 		hapticFeedback = getContext().getSharedPreferences(SokobanMenuActivity.SHARED_PREFS_NAME, Context.MODE_PRIVATE)
-		.getBoolean(SokobanMenuActivity.HAPTIC_FEEDBACK_PREFS_NAME,
-				SokobanMenuActivity.HAPTIC_FEEDBACK_DEFAULT_VALUE);
+				.getBoolean(SokobanMenuActivity.HAPTIC_FEEDBACK_PREFS_NAME,
+						SokobanMenuActivity.HAPTIC_FEEDBACK_DEFAULT_VALUE);
 
 		this.game = ((SokobanGameActivity) context).gameState;
 
@@ -61,15 +62,36 @@ public class SokobanGameView extends View {
 			public boolean onTouch(View v, MotionEvent event) {
 				if (event.getAction() == MotionEvent.ACTION_DOWN) {
 					ignoreDrag = false;
+					isDrag = false;
 					xTouch = (int) event.getX();
 					yTouch = (int) event.getY();
 					xOffset = 0;
 					yOffset = 0;
 				} else if (event.getAction() == MotionEvent.ACTION_UP) {
-					// perhaps move to clicked tile? if not is moving?
+					if( !isDrag )		//Perform a tap-style move instead of a drag. Only move in this manner if it was not a drag.
+					{
+						int[] playerPos = game.getPlayerPosition();
+						int playerX = playerPos[0];
+						int playerY = playerPos[1];
+
+						int tileSize = metrics.tileSize;
+
+						//System.out.println("playerlocation "+(playerX) + " " + (playerY) );
+						//System.out.println("playerrawlocation "+(playerX*tileSize+offsetX) + " " + (playerY*tileSize+offsetY) );
+						//System.out.println("taplocation "+((xTouch-offsetX)/tileSize) + " " + ((yTouch-offsetY)/tileSize) );
+						int moveX = ((xTouch-offsetX)/tileSize)-playerX;//touch location - player location
+						int moveY = ((yTouch-offsetY)/tileSize)-playerY;//touch location - player location
+
+						if( !(moveX != 0 && moveY != 0) )//Only perform the move if it is a straight line (of any length)
+						{
+							performMove(moveX, moveY);//This method performs the needed checks and prevents illegal (straight-line) moves
+						}
+					}
 				} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
 					if (ignoreDrag)
 						return true;
+
+					isDrag = true;
 
 					// System.out.println("MOVING: " + event.getX() + ", " + event.getY());
 					xOffset += xTouch - (int) event.getX();
