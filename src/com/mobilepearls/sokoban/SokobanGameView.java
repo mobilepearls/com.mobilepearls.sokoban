@@ -79,13 +79,11 @@ public class SokobanGameView extends View {
 						//System.out.println("playerlocation "+(playerX) + " " + (playerY) );
 						//System.out.println("playerrawlocation "+(playerX*tileSize+offsetX) + " " + (playerY*tileSize+offsetY) );
 						//System.out.println("taplocation "+((xTouch-offsetX)/tileSize) + " " + ((yTouch-offsetY)/tileSize) );
-						int moveX = ((xTouch-offsetX)/tileSize)-playerX;//touch location - player location
-						int moveY = ((yTouch-offsetY)/tileSize)-playerY;//touch location - player location
-
-						if( !(moveX != 0 && moveY != 0) )//Only perform the move if it is a straight line (of any length)
-						{
-							performMove(moveX, moveY);//This method performs the needed checks and prevents illegal (straight-line) moves
-						}
+						int moveX = ((xTouch-offsetX)/tileSize);//touch location
+						int moveY = ((yTouch-offsetY)/tileSize);//touch location
+						//System.out.println("move location: "+moveX + " " + moveY);
+						//Teleport allows non-straight-line moves
+						performTeleport(moveX, moveY);//This method performs the needed checks and prevents illegal moves
 					}
 				} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
 					if (ignoreDrag)
@@ -352,17 +350,34 @@ public class SokobanGameView extends View {
 		customSizeChanged();
 	}
 
+	/**
+	 * Same as performMove, except player may teleport across the board in a single move.
+	 * Used when performing a tap action instead of dragging.
+	 * @param dx
+	 * @param dy
+	 */
+	void performTeleport(int dx, int dy) {
+		if (game.tryTeleport(dx, dy)){
+			updateAfterMove();
+		}
+	}
+	
 	void performMove(int dx, int dy) {
 		if (game.tryMove(dx, dy)) {
-			if (hapticFeedback) {
-				performHapticFeedback(HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
-			}
-			centerScreenOnPlayerIfNecessary();
-			invalidate();
+			updateAfterMove();
+		}
+	}
+	
+	void updateAfterMove()
+	{
+		if (hapticFeedback) {
+			performHapticFeedback(HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+		}
+		centerScreenOnPlayerIfNecessary();
+		invalidate();
 
-			if (game.isDone()) {
-				gameOver();
-			}
+		if (game.isDone()) {
+			gameOver();
 		}
 	}
 }

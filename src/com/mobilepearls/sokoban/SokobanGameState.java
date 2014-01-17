@@ -1,6 +1,7 @@
 package com.mobilepearls.sokoban;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 @SuppressWarnings("serial")
@@ -226,4 +227,139 @@ public class SokobanGameState implements Serializable {
 		return somethingChanged;
 	}
 
+	/**
+	 * Find the shortest path from the player to the destination, if one exists.
+	 * This method will refuse to push diamonds unless the player taps a diamond.
+	 * It will only push a diamond when it is tapped if the player is directly adjacent.
+	 * If the space tapped is empty, it simply tries to find a way to that point.
+	 * If there is a path, it teleports to the destination and returns true.  If not, it returns false.
+	 * @param dx
+	 * @param dy
+	 * @return
+	 */
+	public boolean tryTeleport(int dx, int dy)
+	{
+		//Before beginning the search, make sure the destination is valid.
+		if( !(dx > -1 && dx < map.length && dy > -1 && dy < map[0].length) )
+			return false;
+
+		int playerX = -1;
+		int playerY = -1;
+		// find player position
+		for (int x = 0; x < map.length; x++) {
+			for (int y = 0; y < map[0].length; y++) {
+				char c = map[x][y];
+				if (CHAR_MAN_ON_FLOOR == c || CHAR_MAN_ON_TARGET == c) {
+					playerX = x;
+					playerY = y;
+				}
+			}
+		}
+		
+		if( map[dx][dy] != CHAR_FLOOR && map[dx][dy] != CHAR_TARGET )	//If it's not an empty spot...
+		{
+			//If it's a diamond, push it IF you're directly adjacent.
+			if( map[dx][dy] == CHAR_DIAMOND_ON_FLOOR || map[dx][dy] == CHAR_DIAMOND_ON_TARGET )
+			{
+				if( (playerX == dx-1 && playerY == dy) || 
+					(playerX == dx+1 && playerY == dy) ||
+					(playerX == dx && playerY == dy-1) ||
+					(playerX == dx && playerY == dy+1) )
+				{
+					return tryMove(dx-playerX, dy-playerY);//Make it an offset from the player
+				}
+			}
+			//If it's not empty and not a diamond, we can't go there.
+			return false;
+		}
+		
+		ArrayList<Integer[]> elements = new ArrayList<Integer[]>();
+
+		//Start queue at player.  If in the future there's a need to actually find the shortest path,
+		//A third element will be needed to determine distance.
+		elements.add(new Integer[]{playerX, playerY});//Starting at distance 0
+
+		//elements will continue to expand,
+		//but eventually it will fill all spaces and stop if there's no solution
+		for(int i = 0; i < elements.size(); i++)
+		{
+			Integer[] loc = elements.get(i);
+
+			//Note that ALL the levels are framed with walls, so there should
+			//be no need to do bounds checks; it should be impossible to
+			//get an out-of-bounds exception when performing this search
+			//as long as there isn't a hole into the abyss
+			for( int j = 0; j < 4; j++ )
+			{
+				Integer[] adjLoc = new Integer[2];
+
+				switch( j )
+				{
+					case 0:						//Left side
+						adjLoc[0] = loc[0]-1;
+						adjLoc[1] = loc[1];
+						//adjLoc[2] = loc[2]+1;
+						break;
+					case 1:						//Right side
+						adjLoc[0] = loc[0]+1;
+						adjLoc[1] = loc[1];
+						//adjLoc[2] = loc[2]+1;
+						break;
+					case 2:						//Top side
+						adjLoc[0] = loc[0];
+						adjLoc[1] = loc[1]+1;
+						//adjLoc[2] = loc[2]+1;
+						break;
+					case 3:						//Bottom side
+						adjLoc[0] = loc[0];
+						adjLoc[1] = loc[1]-1;
+						//adjLoc[2] = loc[2]+1;
+						break;
+				}
+
+				//We must determine that it is an empty spot and that we haven't already visited it.
+				if(  (map[adjLoc[0]][adjLoc[1]] == CHAR_FLOOR || map[adjLoc[0]][adjLoc[1]] == CHAR_TARGET) &&
+						!containsCoords(elements, adjLoc[0], adjLoc[1] ) )//Would have to do more comparisons here to actually show shortest path
+				{
+					if( adjLoc[0] == dx && adjLoc[1] == dy )//If this is equal to the destination, then we KNOW we can teleport to it.
+					{
+						//Perform teleport
+						Undo undo;
+						if (undos.size() > 2000) {
+							// size of undo: 9 bytes + object overhead = 25?
+							// reuse and clear undo object
+							undo = undos.removeFirst();
+							undo.c3 = 0;
+						} else {
+							undo = new Undo();
+						}
+						undos.add(undo);
+						
+						undo.x1 = (byte) playerX;
+						undo.y1 = (byte) playerY;
+						undo.c1 = map[playerX][playerY];
+						map[playerX][playerY] = originalCharWhenManLeaves(map[playerX][playerY]);
+						undo.x2 = (byte) dx;
+						undo.y2 = (byte) dy;
+						undo.c2 = map[dx][dy];
+						map[dx][dy] = newCharWhenManEnters(map[dx][dy]);
+						return true;
+					}
+					elements.add(adjLoc);
+				}
+			}
+		}
+		return false;//Path to destination not found
+	}
+	
+	private boolean containsCoords(ArrayList<Integer[]> elements, int x, int y)
+	{
+		for(int i = 0; i < elements.size(); i++)
+		{
+			Integer[] element = elements.get(i);
+			if( element[0] == x && element[1] == y )
+				return true;
+		}
+		return false;
+	}
 }
