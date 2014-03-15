@@ -33,6 +33,7 @@ public class SokobanGameView extends View {
 	final SokobanGameState game;
 	private final boolean hapticFeedback;
 	boolean ignoreDrag;
+	boolean isDrag;		//Used to determine if the touchscreen move is a tap or drag
 	private Bitmap manOnFloorBitmap;
 	private Bitmap manOnTargetBitmap;
 	GameMetrics metrics;
@@ -46,8 +47,8 @@ public class SokobanGameView extends View {
 		super(context, attributes);
 
 		hapticFeedback = getContext().getSharedPreferences(SokobanMenuActivity.SHARED_PREFS_NAME, Context.MODE_PRIVATE)
-		.getBoolean(SokobanMenuActivity.HAPTIC_FEEDBACK_PREFS_NAME,
-				SokobanMenuActivity.HAPTIC_FEEDBACK_DEFAULT_VALUE);
+				.getBoolean(SokobanMenuActivity.HAPTIC_FEEDBACK_PREFS_NAME,
+						SokobanMenuActivity.HAPTIC_FEEDBACK_DEFAULT_VALUE);
 
 		this.game = ((SokobanGameActivity) context).gameState;
 
@@ -56,17 +57,40 @@ public class SokobanGameView extends View {
 			private int xTouch;
 			private int yOffset;
 			private int yTouch;
+			private long downTime;	//Unfortunately, some screens seem to generate move events even for a very quick tap.
+									//Therefore, the definition of a drag motion will instead be defined as the point when
+									//The player has dragged far enough to move one square.  If they have not, then there
+									//is a time cutoff for how long the tap can still be considered a tap.
+									//Check the ACTION_UP section below to find out how many milliseconds are allowed. 
 
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if (event.getAction() == MotionEvent.ACTION_DOWN) {
 					ignoreDrag = false;
+					isDrag = false;
+					downTime = System.currentTimeMillis();
 					xTouch = (int) event.getX();
 					yTouch = (int) event.getY();
 					xOffset = 0;
 					yOffset = 0;
 				} else if (event.getAction() == MotionEvent.ACTION_UP) {
-					// perhaps move to clicked tile? if not is moving?
+					if( !isDrag && System.currentTimeMillis() < downTime+200  )		//Perform a tap-style move instead of a drag. Only move in this manner if it was not a drag.
+					{
+						int[] playerPos = game.getPlayerPosition();
+						int playerX = playerPos[0];
+						int playerY = playerPos[1];
+
+						int tileSize = metrics.tileSize;
+
+						//System.out.println("playerlocation "+(playerX) + " " + (playerY) );
+						//System.out.println("playerrawlocation "+(playerX*tileSize+offsetX) + " " + (playerY*tileSize+offsetY) );
+						//System.out.println("taplocation "+((xTouch-offsetX)/tileSize) + " " + ((yTouch-offsetY)/tileSize) );
+						int moveX = ((xTouch-offsetX)/tileSize);//touch location
+						int moveY = ((yTouch-offsetY)/tileSize);//touch location
+						//System.out.println("move location: "+moveX + " " + moveY);
+						//Teleport allows non-straight-line moves
+						performTeleport(moveX, moveY);//This method performs the needed checks and prevents illegal moves
+					}
 				} else if (event.getAction() == MotionEvent.ACTION_MOVE) {
 					if (ignoreDrag)
 						return true;
@@ -81,6 +105,7 @@ public class SokobanGameView extends View {
 						// perhaps move x?
 						dx = (xOffset) / metrics.tileSize;
 						if (dx != 0) {
+							isDrag = true;
 							yOffset = 0; // <= since we move horizontally, reset vertical offset
 							xOffset -= dx * metrics.tileSize;
 						}
@@ -88,6 +113,7 @@ public class SokobanGameView extends View {
 						// perhaps move y?
 						dy = (yOffset) / metrics.tileSize;
 						if (dy != 0) {
+							isDrag = true;
 							xOffset = 0; // <= since we move vertically, reset horizontal offset
 							yOffset -= dy * metrics.tileSize;
 						}
@@ -330,17 +356,34 @@ public class SokobanGameView extends View {
 		customSizeChanged();
 	}
 
+	/**
+	 * Same as performMove, except player may teleport across the board in a single move.
+	 * Used when performing a tap action instead of dragging.
+	 * @param dx
+	 * @param dy
+	 */
+	void performTeleport(int dx, int dy) {
+		if (game.tryTeleport(dx, dy)){
+			updateAfterMove();
+		}
+	}
+	
 	void performMove(int dx, int dy) {
 		if (game.tryMove(dx, dy)) {
-			if (hapticFeedback) {
-				performHapticFeedback(HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
-			}
-			centerScreenOnPlayerIfNecessary();
-			invalidate();
+			updateAfterMove();
+		}
+	}
+	
+	void updateAfterMove()
+	{
+		if (hapticFeedback) {
+			performHapticFeedback(HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+		}
+		centerScreenOnPlayerIfNecessary();
+		invalidate();
 
-			if (game.isDone()) {
-				gameOver();
-			}
+		if (game.isDone()) {
+			gameOver();
 		}
 	}
 }
