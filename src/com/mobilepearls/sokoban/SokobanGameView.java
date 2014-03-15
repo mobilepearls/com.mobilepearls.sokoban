@@ -57,18 +57,24 @@ public class SokobanGameView extends View {
 			private int xTouch;
 			private int yOffset;
 			private int yTouch;
+			private long downTime;	//Unfortunately, some screens seem to generate move events even for a very quick tap.
+									//Therefore, the definition of a drag motion will instead be defined as the point when
+									//The player has dragged far enough to move one square.  If they have not, then there
+									//is a time cutoff for how long the tap can still be considered a tap.
+									//Check the ACTION_UP section below to find out how many milliseconds are allowed. 
 
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if (event.getAction() == MotionEvent.ACTION_DOWN) {
 					ignoreDrag = false;
 					isDrag = false;
+					downTime = System.currentTimeMillis();
 					xTouch = (int) event.getX();
 					yTouch = (int) event.getY();
 					xOffset = 0;
 					yOffset = 0;
 				} else if (event.getAction() == MotionEvent.ACTION_UP) {
-					if( !isDrag )		//Perform a tap-style move instead of a drag. Only move in this manner if it was not a drag.
+					if( !isDrag && System.currentTimeMillis() < downTime+200  )		//Perform a tap-style move instead of a drag. Only move in this manner if it was not a drag.
 					{
 						int[] playerPos = game.getPlayerPosition();
 						int playerX = playerPos[0];
@@ -89,8 +95,6 @@ public class SokobanGameView extends View {
 					if (ignoreDrag)
 						return true;
 
-					isDrag = true;
-
 					// System.out.println("MOVING: " + event.getX() + ", " + event.getY());
 					xOffset += xTouch - (int) event.getX();
 					yOffset += yTouch - (int) event.getY();
@@ -101,6 +105,7 @@ public class SokobanGameView extends View {
 						// perhaps move x?
 						dx = (xOffset) / metrics.tileSize;
 						if (dx != 0) {
+							isDrag = true;
 							yOffset = 0; // <= since we move horizontally, reset vertical offset
 							xOffset -= dx * metrics.tileSize;
 						}
@@ -108,6 +113,7 @@ public class SokobanGameView extends View {
 						// perhaps move y?
 						dy = (yOffset) / metrics.tileSize;
 						if (dy != 0) {
+							isDrag = true;
 							xOffset = 0; // <= since we move vertically, reset horizontal offset
 							yOffset -= dy * metrics.tileSize;
 						}
