@@ -1,2 +1,15 @@
-/bin
-/gen
+/bin/
+/gen/
+/libs/
+/obj/
+/local.properties
+
+# The png icons are generated from svg:
+/res/drawable-*/ic_*.png
+/res/drawable/banner.png
+/icon.png
+
+# Android Studio:
+/.idea/workspace.xml
+/.gradle/
+/build/
