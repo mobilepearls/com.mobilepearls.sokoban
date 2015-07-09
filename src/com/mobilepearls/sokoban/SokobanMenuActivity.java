@@ -66,13 +66,5 @@ public class SokobanMenuActivity extends Activity {
 				startActivity(intent);
 			}
 		});
-
-		Button exitButton = (Button) findViewById(R.id.exitbutton);
-		exitButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				finish();
-			}
-		});
 	}
 }

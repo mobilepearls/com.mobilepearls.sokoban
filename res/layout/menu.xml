@@ -12,9 +12,6 @@
 		<Button android:id="@+id/aboutbutton" android:layout_width="fill_parent"
 			android:layout_height="wrap_content" android:text="About"
 			android:layout_below="@id/settingsbutton" />
-		<Button android:id="@+id/exitbutton" android:layout_width="fill_parent"
-			android:layout_height="wrap_content" android:text="Exit"
-			android:layout_below="@id/aboutbutton"/>
 	</RelativeLayout>
 
 </RelativeLayout>
