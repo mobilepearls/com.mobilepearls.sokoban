@@ -1,16 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-    
-  <com.mobilepearls.sokoban.SokobanGameView
-    android:hapticFeedbackEnabled="true"
-   	android:id="@+id/android:memoryview"
-    android:layout_width="fill_parent"
-    android:focusable="true"
     android:layout_height="fill_parent"
-    />
+    android:orientation="vertical" >
+
+    <com.mobilepearls.sokoban.SokobanGameView
+        android:id="@+id/android:memoryview"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/game_button_row"
+        android:focusable="true" />
+
+    <LinearLayout
+        android:id="@id/game_button_row"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@android:color/black"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:weightSum="3" >
+
+        <Button
+            android:id="@+id/game_leavebutton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/game_leave" />
+
+        <Button
+            android:id="@+id/game_restartbutton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/game_restart" />
+
+        <Button
+            android:id="@+id/game_undobutton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/game_undo" />
+    </LinearLayout>
 
 </RelativeLayout>

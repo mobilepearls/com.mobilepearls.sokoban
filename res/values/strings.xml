@@ -2,4 +2,7 @@
 <resources>
 <string name="app_name">Sokoban</string>
 <string name="back_button">Back</string>
+<string name="game_undo">Undo</string>
+<string name="game_restart">Restart</string>
+<string name="game_leave">Leave</string>
 </resources>

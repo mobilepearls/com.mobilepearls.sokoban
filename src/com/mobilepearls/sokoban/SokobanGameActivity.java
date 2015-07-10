@@ -1,16 +1,18 @@
 package com.mobilepearls.sokoban;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.Point;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
 
 public class SokobanGameActivity extends Activity {
 
@@ -26,12 +28,7 @@ public class SokobanGameActivity extends Activity {
 	public static final String SHOW_HELP_INTENT_EXTRA = "SHOW_HELP";
 	public SokobanGameState gameState;
 
-	private SokobanGameView view;
-
-	@Override
-	public void onBackPressed() {
-		view.backPressed();
-	}
+	SokobanGameView view;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -55,27 +52,42 @@ public class SokobanGameActivity extends Activity {
 		setContentView(R.layout.main);
 
 		Display display = getWindowManager().getDefaultDisplay();
-		int defaultImageSize = Math.min(display.getWidth(), display.getHeight()) / 11; // 11 = tile size of first level
+		Point size = new Point();
+		display.getSize(size);
+		int defaultImageSize = Math.min(size.x, size.y) / 11; // 11 = tile size of first level
 		if (defaultImageSize % 2 != 0)
 			defaultImageSize--;
-		IMAGE_SIZE = getSharedPreferences(SokobanMenuActivity.SHARED_PREFS_NAME, MODE_PRIVATE).getInt(
+		IMAGE_SIZE = getSharedPreferences(SokobanPrefs.SHARED_PREFS_NAME, MODE_PRIVATE).getInt(
 				IMAGE_SIZE_PREFS_KEY, defaultImageSize);
 
 		view = (SokobanGameView) findViewById(R.id.android_memoryview);
-	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.options_menu, menu);
-		return true;
+		findViewById(R.id.game_undobutton).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				view.backPressed();
+			}
+		});
+		findViewById(R.id.game_restartbutton).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				gameState.restart();
+				view.invalidate();
+			}
+		});
+		findViewById(R.id.game_leavebutton).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				finish();
+			}
+		});
 	}
 
 	/** Overridden to handle back button - see {@link SokobanGameActivity#onBackPressed() } */
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-			if (IMAGE_SIZE < 68)
+			if (IMAGE_SIZE < 136)
 				setImageSize(IMAGE_SIZE + 2);
 			return true;
 		} else if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
@@ -85,8 +97,6 @@ public class SokobanGameActivity extends Activity {
 		}
 		return super.onKeyDown(keyCode, event);
 	}
-
-
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
@@ -98,27 +108,32 @@ public class SokobanGameActivity extends Activity {
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		if (item.getItemId() == R.id.restart_menu) {
-			gameState.restart();
-			view.invalidate();
-		} else if (item.getItemId() == R.id.back_menu) {
-			finish();
-		} else if (item.getItemId() == R.id.help_menu) {
-			showHelp();
-		}
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putSerializable(GAME_KEY, gameState);
 	}
 
+	@TargetApi(Build.VERSION_CODES.KITKAT)
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		super.onWindowFocusChanged(hasFocus);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+			// Immersive mode in kitkat or later.
+			if (hasFocus) {
+				getWindow().getDecorView().setSystemUiVisibility(
+						View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+						| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+						| View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+			}
+		} else {
+			// Dim on older android versions.
+			getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+		}
+	}
+
 	private void setImageSize(int newSize) {
 		IMAGE_SIZE = newSize;
-		SharedPreferences prefs = getSharedPreferences(SokobanMenuActivity.SHARED_PREFS_NAME, MODE_PRIVATE);
+		SharedPreferences prefs = getSharedPreferences(SokobanPrefs.SHARED_PREFS_NAME, MODE_PRIVATE);
 		Editor editor = prefs.edit();
 		editor.putInt(IMAGE_SIZE_PREFS_KEY, newSize);
 		editor.commit();
@@ -128,10 +143,8 @@ public class SokobanGameActivity extends Activity {
 
 	public void showHelp() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder
-		.setMessage("Push all red diamonds on the green targets to complete a level. Complete levels to unlock new ones.\n\nZoom in and out using the volume control.\n\nUndo moves with the back button.");
+		builder.setMessage("Push all red diamonds on the green targets to complete a level. Complete levels to unlock new ones.\n\nZoom in and out using the volume control.\n\nUndo moves with the back button.");
 		builder.setPositiveButton("Ok", null);
 		builder.create().show();
 	}
-
 }

@@ -1,5 +1,6 @@
 package com.mobilepearls.sokoban;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -15,7 +16,6 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.os.Vibrator;
 import android.util.AttributeSet;
-import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,7 +31,6 @@ public class SokobanGameView extends View {
 	private Bitmap diamondOnTargetBitmap;
 	private Bitmap floorBitmap;
 	final SokobanGameState game;
-	private final boolean hapticFeedback;
 	boolean ignoreDrag;
 	private Bitmap manOnFloorBitmap;
 	private Bitmap manOnTargetBitmap;
@@ -42,12 +41,14 @@ public class SokobanGameView extends View {
 	private Bitmap targetBitmap;
 	private Bitmap wallBitmap;
 
+	@SuppressLint("ClickableViewAccessibility")
 	public SokobanGameView(Context context, AttributeSet attributes) {
 		super(context, attributes);
 
-		hapticFeedback = getContext().getSharedPreferences(SokobanMenuActivity.SHARED_PREFS_NAME, Context.MODE_PRIVATE)
-		.getBoolean(SokobanMenuActivity.HAPTIC_FEEDBACK_PREFS_NAME,
-				SokobanMenuActivity.HAPTIC_FEEDBACK_DEFAULT_VALUE);
+		if (isInEditMode()) {
+			game = null;
+			return;
+		}
 
 		this.game = ((SokobanGameActivity) context).gameState;
 
@@ -134,8 +135,9 @@ public class SokobanGameView extends View {
 		if (game.performUndo()) {
 			centerScreenOnPlayerIfNecessary();
 			invalidate();
-		} else if (game.undos.isEmpty()){
-			((Activity) getContext()).finish();
+		} else if (game.undos.isEmpty()) {
+			Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+			vibrator.vibrate(300);
 		}
 	}
 
@@ -179,8 +181,7 @@ public class SokobanGameView extends View {
 		metrics.tileSize = SokobanGameActivity.IMAGE_SIZE;
 		// "-1" since the whole border tiles does not need to fit on screen:
 		metrics.levelFitsOnScreen = ((game.getWidthInTiles() - 1) * metrics.tileSize <= getWidth() && (game
-				.getHeightInTiles() - 1)
-				* metrics.tileSize <= getHeight());
+				.getHeightInTiles() - 1) * metrics.tileSize <= getHeight());
 	}
 
 	public void customSizeChanged() {
@@ -228,6 +229,8 @@ public class SokobanGameView extends View {
 	@Override
 	public void draw(Canvas canvas) {
 		canvas.drawColor(Color.BLACK);
+		if (isInEditMode())
+			return;
 		canvas.setDensity(Bitmap.DENSITY_NONE);
 
 		final int widthInTiles = game.getWidthInTiles();
@@ -276,13 +279,11 @@ public class SokobanGameView extends View {
 	}
 
 	void gameOver() {
-		if (hapticFeedback) {
-			Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
-			vibrator.vibrate(300);
-		}
+		Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+		vibrator.vibrate(300);
 		invalidate();
 
-		SharedPreferences prefs = getContext().getSharedPreferences(SokobanMenuActivity.SHARED_PREFS_NAME,
+		SharedPreferences prefs = getContext().getSharedPreferences(SokobanPrefs.SHARED_PREFS_NAME,
 				Context.MODE_PRIVATE);
 		final String maxLevelPrefName = SokobanLevelMenuActivity.getMaxLevelPrefName(game.currentLevelSet);
 		int currentMaxLevel = prefs.getInt(maxLevelPrefName, 1);
@@ -327,14 +328,12 @@ public class SokobanGameView extends View {
 	@Override
 	protected void onSizeChanged(int width, int height, int oldw, int oldh) {
 		super.onSizeChanged(width, height, oldw, oldh);
-		customSizeChanged();
+		if (!isInEditMode())
+			customSizeChanged();
 	}
 
 	void performMove(int dx, int dy) {
 		if (game.tryMove(dx, dy)) {
-			if (hapticFeedback) {
-				performHapticFeedback(HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
-			}
 			centerScreenOnPlayerIfNecessary();
 			invalidate();
 
