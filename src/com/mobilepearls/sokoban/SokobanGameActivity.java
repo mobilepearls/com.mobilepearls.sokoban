@@ -3,6 +3,7 @@ package com.mobilepearls.sokoban;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -13,6 +14,7 @@ import android.view.Display;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 
 public class SokobanGameActivity extends Activity {
 
@@ -57,22 +59,30 @@ public class SokobanGameActivity extends Activity {
 		int defaultImageSize = Math.min(size.x, size.y) / 11; // 11 = tile size of first level
 		if (defaultImageSize % 2 != 0)
 			defaultImageSize--;
-		IMAGE_SIZE = getSharedPreferences(SokobanPrefs.SHARED_PREFS_NAME, MODE_PRIVATE).getInt(
-				IMAGE_SIZE_PREFS_KEY, defaultImageSize);
+		IMAGE_SIZE = getSharedPreferences(SokobanPrefs.SHARED_PREFS_NAME, MODE_PRIVATE).getInt(IMAGE_SIZE_PREFS_KEY,
+				defaultImageSize);
 
 		view = (SokobanGameView) findViewById(R.id.android_memoryview);
 
-		findViewById(R.id.game_undobutton).setOnClickListener(new OnClickListener() {
+		View undoButton = findViewById(R.id.game_undobutton);
+		undoButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				view.backPressed();
 			}
 		});
-		findViewById(R.id.game_restartbutton).setOnClickListener(new OnClickListener() {
+		undoButton.setOnLongClickListener(new OnLongClickListener() {
 			@Override
-			public void onClick(View v) {
-				gameState.restart();
-				view.invalidate();
+			public boolean onLongClick(View v) {
+				new AlertDialog.Builder(SokobanGameActivity.this).setMessage(R.string.game_restart)
+				.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						gameState.restart();
+						view.invalidate();
+					}
+				}).setNegativeButton(android.R.string.cancel, null).show();
+				return true;
 			}
 		});
 		findViewById(R.id.game_leavebutton).setOnClickListener(new OnClickListener() {
@@ -143,7 +153,8 @@ public class SokobanGameActivity extends Activity {
 
 	public void showHelp() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setMessage("Push all red diamonds on the green targets to complete a level. Complete levels to unlock new ones.\n\nZoom in and out using the volume control.\n\nUndo moves with the back button.");
+		builder.setMessage(
+				"Push all red diamonds on the green targets to complete a level. Complete levels to unlock new ones.\n\nZoom in and out using the volume control.\n\nUndo moves with the back button.");
 		builder.setPositiveButton("Ok", null);
 		builder.create().show();
 	}

@@ -19,7 +19,15 @@
         android:background="@android:color/black"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:weightSum="3" >
+        android:weightSum="2" >
+
+        <Button
+            android:id="@+id/game_undobutton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:longClickable="true"
+            android:text="@string/game_undo" />
 
         <Button
             android:id="@+id/game_leavebutton"
@@ -27,20 +35,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/game_leave" />
-
-        <Button
-            android:id="@+id/game_restartbutton"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/game_restart" />
-
-        <Button
-            android:id="@+id/game_undobutton"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/game_undo" />
     </LinearLayout>
 
 </RelativeLayout>
